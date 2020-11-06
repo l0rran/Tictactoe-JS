@@ -1,0 +1,12 @@
+{
+  "name": "tictactoe",
+  "version": "1.0.0",
+  "description": "Multiplayer tictactoe game",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node ."
+  },
+  "repository": "git@github.com:l0rran/Tictactoe-JS.git",
+  "author": "l0rran",
+  "license": "MIT"
+}
