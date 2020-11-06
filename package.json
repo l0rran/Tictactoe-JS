@@ -3,10 +3,15 @@
   "version": "1.0.0",
   "description": "Multiplayer tictactoe game",
   "main": "src/server.js",
+  "type": "module",
   "scripts": {
     "start": "node ."
   },
   "repository": "git@github.com:l0rran/Tictactoe-JS.git",
   "author": "l0rran",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^3.0.0"
+  }
 }

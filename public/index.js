@@ -1,3 +1,9 @@
+const socket = io();
+
+socket.on("connect", () => {
+  console.log(`Connection established on server with id: ${socket.id}`);
+});
+
 const playerTextElement = document.getElementById("js-player-text");
 const playerText = playerTextElement.textContent;
 
