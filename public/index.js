@@ -1,7 +1,34 @@
 const socket = io();
+let Tictactoe;
+let Rooms;
 
 socket.on("connect", () => {
   console.log(`Connection established on server with id: ${socket.id}`);
+});
+
+socket.on("gameInfo", (gameInfo) => {
+  Tictactoe = gameInfo.constants;
+  Rooms = gameInfo.rooms;
+});
+
+function createRoom(name) {
+  socket.emit("create room", { name });
+}
+
+function joinRoom(name) {
+  socket.emit("join room", { name });
+}
+
+socket.on("playerTurnChanged", handlePlayerTurnChange);
+socket.on("boardPositionChanged", handleBoardPositionChange);
+socket.on("gameStateChanged", handleGameStateChange);
+
+socket.on("update rooms", ({ rooms }) => {
+  Rooms = rooms;
+});
+
+socket.on("joined room", (message) => {
+  console.log(message);
 });
 
 const playerTextElement = document.getElementById("js-player-text");
@@ -17,9 +44,7 @@ const boardElements = document.getElementsByClassName("js-btn-board");
 function onElementClick(e) {
   e.preventDefault();
   const elementPos = e.target.dataset.pos;
-  if (!Tictactoe.hasValue(elementPos)) {
-    Tictactoe.play(elementPos);
-  }
+  socket.emit("play", { position: elementPos });
 }
 
 Array.from(boardElements).forEach((element) => {
@@ -27,7 +52,7 @@ Array.from(boardElements).forEach((element) => {
 });
 
 function reset() {
-  Tictactoe.restart();
+  socket.emit("reset");
 }
 
 function clearElement(elementToChange) {
@@ -83,9 +108,3 @@ function handleGameStateChange({ state, winner, winPositions }) {
     gameOverMessageContainerElement.removeAttribute("active");
   }
 }
-
-Tictactoe.onPlayerTurnChange.subscribe(handlePlayerTurnChange);
-Tictactoe.onBoardValueChange.subscribe(handleBoardPositionChange);
-Tictactoe.onGameStateChange.subscribe(handleGameStateChange);
-
-reset();
