@@ -1,8 +1,13 @@
+:root {
+  --main-background-color-one: rgb(255, 230, 177);
+  --main-background-color-two: rgb(127, 140, 255);
+}
+
 body {
   height: 100vh;
   margin: 0;
   display: flex;
-  align-content: center;
+  align-items: center;
   justify-content: center;
 }
 
@@ -12,24 +17,208 @@ body {
   box-sizing: border-box;
 }
 
+.hidden {
+  display: none !important;
+}
+
+.card {
+  -webkit-box-shadow: 2px 7px 19px -2px rgba(0, 0, 0, 0.75);
+  -moz-box-shadow: 2px 7px 19px -2px rgba(0, 0, 0, 0.75);
+  box-shadow: 2px 7px 19px -2px rgba(0, 0, 0, 0.75);
+}
+
+.btn {
+  background-color: rgb(255, 166, 0);
+  border: none;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  outline: auto rgb(140, 196, 196);
+  cursor: pointer;
+  transition: all 0.3s ease-in;
+  font-size: 16px;
+}
+
+.btn:hover {
+  background-color: rgb(255, 200, 127);
+}
+
+.btn-list {
+  display: flex;
+  justify-content: space-between;
+  background: linear-gradient(
+    rgb(246, 225, 255),
+    rgb(254, 252, 255),
+    rgb(246, 225, 255)
+  );
+  width: 100%;
+  color: black;
+  text-decoration: none;
+  margin-bottom: 2px;
+  padding: 4px 8px;
+
+  min-height: 1.25em;
+  line-height: 1.25;
+
+  cursor: default;
+}
+
+.btn-list.active {
+  cursor: pointer;
+}
+
+.btn-list.active:hover {
+  background: linear-gradient(
+    rgb(238, 220, 252) 40%,
+    rgb(240, 209, 255) 60%,
+    rgb(243, 220, 252) 100%
+  );
+}
+
+.ratio-box {
+  position: relative;
+}
+
+.ratio-box::before {
+  content: "";
+  display: block;
+  padding-top: 100%;
+}
+
+.ratio-box-items {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.ratio-box.ratio-box-tall::before {
+  padding-top: 120%;
+}
+
+ul {
+  list-style-type: none;
+  padding: 0;
+}
+
 .main {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: center;
-  align-self: center;
-  height: 80%;
+  width: 100%;
+  height: 100%;
+
+  max-width: 1024px;
+}
+
+.main-content-container {
+  width: 60%;
+}
+
+.main-content-items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.main-content-background {
+  background: radial-gradient(
+    var(--main-background-color-one),
+    var(--main-background-color-two)
+  );
+}
+
+.menu-items {
+}
+
+.menu ul {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-self: flex-end;
+  width: 40%;
+
+  flex-grow: 1;
+}
+
+.menu ul li {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.menu-title-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  flex-grow: 0.5;
+}
+
+.menu-title {
+  font-size: 3em;
+  color: white;
+
+  -webkit-text-stroke-width: 1px;
+  -webkit-text-stroke-color: rgb(73, 73, 73);
+}
+
+.menu-btn {
+  width: 100%;
+}
+
+.lobby-rooms-list-container {
+  overflow: hidden;
+  overflow-y: scroll;
+  max-height: 60%;
+  min-height: 60%;
+  width: 60%;
+  margin-bottom: 16px;
+  padding: 0;
+
+  background: repeating-linear-gradient(
+    to right,
+    rgb(255, 231, 211) 20px,
+    rgb(255, 236, 201) 20px
+  );
+}
+
+.lobby-rooms-list-container ul {
+  width: 100%;
+  margin: 0;
+}
+
+.lobby-create-room-container {
+  transition: all 0.5s ease-out;
+  
+  max-height: 0;
+  overflow: hidden;
+
+  display: flex;
+  justify-content: center;
+
+  margin-top: 16px;
+}
+
+.lobby-create-room-container.active {
+  max-height: 5em;
+}
+
+.lobby-create-room-container input {
+  margin-right: 8px;
+  outline-color: rgb(204, 0, 255)
+}
+
+.game {
   width: 80%;
 }
 
 .board-container {
-  position: relative;
-  width: 40%;
-}
-
-.board-container::before {
-  content: "";
-  display: block;
-  padding-top: 100%;
+  width: 60%;
+  max-width: 400px;
 }
 
 .board {
@@ -39,17 +228,9 @@ body {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
 
-  position: absolute;
-  top: 0;
-  left: 0;
-
   background: linear-gradient(rgb(73, 83, 219), rgb(38, 52, 245));
 
   margin-bottom: 16px;
-
-  -webkit-box-shadow: 2px 7px 19px -2px rgba(0, 0, 0, 0.75);
-  -moz-box-shadow: 2px 7px 19px -2px rgba(0, 0, 0, 0.75);
-  box-shadow: 2px 7px 19px -2px rgba(0, 0, 0, 0.75);
 }
 
 .board .btn-board {
@@ -94,14 +275,29 @@ body {
   color: white;
 }
 
+.board .btn-board.x::after {
+  content: "X";
+  font-size: 1.5em;
+}
+
 .board .btn-board.o {
   background-color: rgb(218, 165, 20);
   color: black;
 }
 
+.board .btn-board.o::after {
+  content: "O";
+  font-size: 1.5em;
+}
+
 .board .btn-board.win {
   color: white;
   background-color: rgb(31, 255, 117);
+}
+
+.board .btn-board.lost {
+  color: white;
+  background-color: rgb(235, 13, 13);
 }
 
 .game-over-message-container {
@@ -117,19 +313,13 @@ body {
   opacity: 100%;
 }
 
-.btn {
-  background-color: rgb(255, 166, 0);
-  border: none;
-  padding: 15px 32px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  outline: auto rgb(140, 196, 196);
-  cursor: pointer;
-  transition: all 0.3s ease-in;
-  font-size: 16px;
-}
+@media screen and (max-width: 1024px) {
+  .main-content-container {
+    width: 100%;
+    height: 100%;
+  }
 
-.btn:hover {
-  background-color: rgb(255, 200, 127);
+  .main-content-container::before {
+    padding-top: 0 !important;
+  }
 }
