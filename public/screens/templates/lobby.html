@@ -1,0 +1,32 @@
+<template>
+  <div
+    class="lobby ratio-box ratio-box-tall main-content-container main-content-background card"
+  >
+    <div class="ratio-box-items main-content-items">
+      <h2>Salas:</h2>
+      <div class="lobby-rooms-list-container card">
+        <ul id="js-lobby-rooms-list"></ul>
+        <div id="js-lobby-rooms-empty-text" class="hidden">
+          <h3>Vazio!</h3>
+          <h4>Seja o primeiro a criar uma sala</h4>
+        </div>
+      </div>
+      <div class="lobby-choices-container">
+        <form action="#" id="js-create-room-form" autocomplete="off">
+          <div class="input-group">
+            <input
+              type="text"
+              name="roomName"
+              class="js-input-name-validation"
+              id="js-create-room-name-input"
+              placeholder="Nome da sala"
+              required
+            />
+            <button type="submit" class="btn">Criar</button>
+          </div>
+        </form>
+        <button id="js-return-menu" class="btn w-100">Voltar</button>
+      </div>
+    </div>
+  </div>
+</template>

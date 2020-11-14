@@ -4,153 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Jogo da Velha</title>
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="./css/styles.css" />
     <script src="/socket.io/socket.io.js" defer></script>
-    <script src="index.js" defer></script>
+    <script src="index.js" type="module" defer></script>
+    <script src="./screens/menu.js" type="module" defer></script>
+    <script src="./screens/lobby.js" type="module" defer></script>
+    <script src="./screens/game.js" type="module" defer></script>
+    <script src="./components/usernameModal.js" type="module" defer></script>
   </head>
   <body>
-    <div class="main">
-      <div
-        class="menu ratio-box ratio-box-tall main-content-container main-content-background card"
-        id="js-menu"
-      >
-        <div class="menu-items ratio-box-items main-content-items">
-          <div class="menu-title-container">
-            <h1 class="menu-title">Jogo da velha</h1>
-
-            <div class="ratio-box board-container card">
-              <div class="ratio-box-items board">
-                <a class="btn-board o"></a>
-                <a class="btn-board x"></a>
-                <a class="btn-board x"></a>
-                <a class="btn-board x"></a>
-                <a class="btn-board o"></a>
-                <a class="btn-board o"></a>
-                <a class="btn-board o"></a>
-                <a class="btn-board x"></a>
-                <a class="btn-board x"></a>
-              </div>
-            </div>
-          </div>
-
-          <ul>
-            <li>
-              <button class="btn menu-btn" id="js-play-single">
-                Jogar Sozinho
-              </button>
-            </li>
-            <li>
-              <button class="btn menu-btn" id="js-play-multi">
-                Multiplayer
-              </button>
-            </li>
-          </ul>
+    <div class="js-modal-page-mask hidden" id="page-mask"></div>
+    <div id="js-username-modal" class="modal-container hidden">
+      <form id="js-form-user-name" action="#" autocomplete="off">
+        <div class="input-group">
+          <input
+            type="text"
+            name="username"
+            id="js-user-name-input"
+            class="js-input-name-validation flex-grow-1"
+            placeholder="Apelido"
+            required
+          />
+          <button type="submit" class="btn small">Entrar</button>
         </div>
-      </div>
-      <div
-        class="lobby ratio-box ratio-box-tall main-content-container main-content-background card hidden"
-        id="js-lobby"
-      >
-        <div class="ratio-box-items main-content-items">
-          <h2>Salas:</h2>
-          <div class="lobby-rooms-list-container card">
-            <ul id="js-lobby-rooms-list">
-            </ul>
-            <div id="js-lobby-rooms-empty-text">
-              <h3>Vazio!</h3>
-              <h4>Seja o primeiro a criar uma sala</h4>
-            </div>
-          </div>
-          <div>
-            <div
-              id="js-create-room-container"
-              class="lobby-create-room-container active"
-            >
-              <input
-                type="text"
-                name="roomName"
-                id="js-create-room-name-input"
-                placeholder="Nome da sala"
-              />
-              <button id="js-create-room-submit" class="btn">Criar</button>
-            </div>
-            <button id="js-return-menu" class="btn">Voltar</button>
-          </div>
-        </div>
-      </div>
-      <div
-        class="game ratio-box ratio-box-tall main-content-container main-content-background card hidden"
-        id="js-game"
-      >
-        <div class="ratio-box-items main-content-items">
-          <h3 id="js-player-text"></h3>
-          <div class="ratio-box board-container card">
-            <div class="ratio-box-items board">
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="0"
-                active
-              ></a>
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="1"
-                active
-              ></a>
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="2"
-                active
-              ></a>
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="3"
-                active
-              ></a>
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="4"
-                active
-              ></a>
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="5"
-                active
-              ></a>
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="6"
-                active
-              ></a>
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="7"
-                active
-              ></a>
-              <a
-                href="#"
-                class="js-btn-board btn-board"
-                data-pos="8"
-                active
-              ></a>
-            </div>
-          </div>
-
-          <div
-            class="js-game-over-message-container game-over-message-container"
-          >
-            <h4 id="js-game-over-message">X Ganhou!</h4>
-          </div>
-          <button class="btn" onclick="reset()">Resetar</button>
-        </div>
-      </div>
+      </form>
+      <button id="js-username-modal-back" class="btn w-100">Voltar</button>
     </div>
+    <div id="js-main-div" class="main"></div>
   </body>
 </html>

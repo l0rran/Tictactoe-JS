@@ -1,0 +1,47 @@
+<template>
+  <div
+    class="game ratio-box ratio-box-tall main-content-container main-content-background card"
+  >
+    <div class="ratio-box-items main-content-items">
+      <button id="js-back-to-lobby-btn" class="btn small back-to-lobby">
+        ⬅
+      </button>
+      <h3 id="js-player-text"></h3>
+      <div class="ratio-box board-container card">
+        <div class="ratio-box-items board">
+          <a href="#" class="js-btn-board btn-board" data-pos="0" active></a>
+          <a href="#" class="js-btn-board btn-board" data-pos="1" active></a>
+          <a href="#" class="js-btn-board btn-board" data-pos="2" active></a>
+          <a href="#" class="js-btn-board btn-board" data-pos="3" active></a>
+          <a href="#" class="js-btn-board btn-board" data-pos="4" active></a>
+          <a href="#" class="js-btn-board btn-board" data-pos="5" active></a>
+          <a href="#" class="js-btn-board btn-board" data-pos="6" active></a>
+          <a href="#" class="js-btn-board btn-board" data-pos="7" active></a>
+          <a href="#" class="js-btn-board btn-board" data-pos="8" active></a>
+        </div>
+      </div>
+
+      <div class="js-game-over-message-container game-over-message-container">
+        <h4 id="js-game-over-message">X Ganhou!</h4>
+      </div>
+
+      <div id="js-game-info" class="game-info">
+        <h4 id="js-game-info-message" class="hidden"></h4>
+        <button id="js-game-info-btn" class="btn" disabled>
+          Aguardando oponente...
+        </button>
+      </div>
+
+      <div class="room-info">
+        <div class="players">
+          <h4 class="title">Jogadores conectados:</h4>
+          <div id="js-room-info-players"></div>
+
+          <hr />
+        </div>
+
+        <div id="js-room-info-log" class="log"></div>
+      </div>
+    </div>
+  </div>
+</template>
