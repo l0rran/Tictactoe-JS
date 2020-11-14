@@ -5,10 +5,13 @@ import { Server as SocketIoServer } from "socket.io";
 import Tictactoe from "./tictactoe.js";
 import RoomManager from "./roomManager.js";
 import { RoomNotFoundError } from "./errors.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
 const sockets = new SocketIoServer(server);
+const port = process.env.PORT || 3000;
 
 app.use(express.static("public"));
 
@@ -202,6 +205,6 @@ sockets.on("connection", (socket) => {
   });
 });
 
-server.listen(3000, () => {
-  console.log("Server listening on port: 3000");
+server.listen(port, () => {
+  console.log(`Server listening on port: ${port}`);
 });
