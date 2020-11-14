@@ -3,6 +3,8 @@ import http from "http";
 import { Server as SocketIoServer } from "socket.io";
 
 import Tictactoe from "./tictactoe.js";
+import RoomManager from "./roomManager.js";
+import { RoomNotFoundError } from "./errors.js";
 
 const app = express();
 const server = http.createServer(app);
@@ -10,140 +12,162 @@ const sockets = new SocketIoServer(server);
 
 app.use(express.static("public"));
 
-let rooms = {};
+const nameRegexPattern = "^(?=[a-zA-Z0-9._]{5,20}$)(?!.*[_.]{2})[^_.].*[^_.]$";
+const nameRegex = new RegExp(nameRegexPattern);
 
-function formatRoomsForPlayers() {
-  let roomsForPlayers = [];
-  for (let [key, value] of Object.entries(rooms)) {
-    roomsForPlayers = [
-      ...roomsForPlayers,
-      { name: key, playersAmount: value.players.length },
-    ];
-  }
-  return roomsForPlayers;
-}
+const roomManager = RoomManager();
 
 function updateRooms(data) {
   if (data && data.socket) {
-    data.socket.emit("update rooms", { rooms: formatRoomsForPlayers() });
+    data.socket.emit("update rooms", { rooms: roomManager.getFormatted() });
   } else {
     sockets
       .to("lobby")
-      .emit("update rooms", { rooms: formatRoomsForPlayers() });
+      .emit("update rooms", { rooms: roomManager.getFormatted() });
   }
 }
 
-const acceptedJoins = {
-  lobby: ({ socket }) => {
-    if (socket.room) {
-      leave({ type: "room", data: { socket } });
-    }
-    if (!socket.inLobby) {
-      socket.join("lobby");
-      socket.emit("joined lobby");
-      updateRooms({ socket, rooms });
-      socket.inLobby = true;
-    }
-  },
-  room: ({ name, socket }) => {
-    if (!rooms[name] || rooms[name].players.length >= 2) {
-      //TODO: Display error message
-      return;
-    }
-    rooms[name].players.push({ playerId: socket.id });
-    socket.room = rooms[name];
-    socket.room.game.events.on("board value changed", (data) => {
-      let newData = { ...data };
-      if (newData.value.playerId) {
-        if (newData.value.playerId === socket.id) {
-          newData.value = "player";
-        } else {
-          newData.value = "opponent";
-        }
-      }
+roomManager.events.on("created", ({ room }) => {
+  updateRooms();
+});
 
-      socket.emit("board value changed", newData);
-    });
+roomManager.events.on("deleted", ({ room }) => {
+  updateRooms();
+});
 
-    socket.room.game.events.on("game state changed", (data) => {
-      let newData = { ...data };
-      if (newData.winner) {
-        if (newData.winner.playerId === socket.id) {
-          newData.winner = "player";
-        } else {
-          newData.winner = "opponent";
-        }
-      }
+roomManager.events.on("player joined", ({ room, player }) => {
+  updateRooms();
+  sockets.to(room.name).emit("player joined", {
+    room: roomManager.formatRoomForClient(room),
+    player: roomManager.formatRoomPlayerForClient(player),
+  });
+});
 
-      socket.emit("game state changed", newData);
-    });
-
-    socket.room.game.events.on("turn changed", ({ turnPlayer }) => {
-      if (turnPlayer) {
-        socket.emit("turn changed", {
-          turnPlayer: turnPlayer.playerId === socket.id ? "player" : "opponent",
-        });
-      }
-    });
-
-    leave({ type: "lobby", data: { socket } });
-    socket.join(name);
-    socket.emit("joined room", { name });
-    socket.room.game.events.emit("player joined", { playerId: socket.id });
-    updateRooms(rooms);
-    console.log(`Room players:`);
-    console.table(socket.room.players);
-  },
-};
-
-const join = ({ type, data }) => {
-  if (type) {
-    acceptedJoins[type](data);
-  }
-};
-
-const acceptedLeaves = {
-  room: ({ socket }) => {
-    if (socket.room) {
-      socket.room.players = socket.room.players.filter((player) => {
-        return player.playerId !== socket.id;
-      });
-      if (Object.keys(socket.room.players).length === 0) {
-        delete rooms[socket.room.name];
-        updateRooms({ rooms });
-      }
-      socket.room.game.events.emit("player left", { playerId: socket.id });
-      socket.leave(socket.room.name);
-      delete socket.room;
-      socket.emit("left room");
-      join({ type: "lobby", data: { socket } });
-      updateRooms();
-    }
-  },
-  lobby: ({ socket }) => {
-    if (socket.inLobby) {
-      socket.leave("lobby");
-      socket.emit("left lobby");
-      socket.inLobby = false;
-    }
-  },
-};
-
-const leave = ({ type, data }) => {
-  if (type) {
-    acceptedLeaves[type](data);
-  }
-};
+roomManager.events.on("player left", ({ room, player }) => {
+  updateRooms();
+  sockets.to(room.name).emit("player left", {
+    room: roomManager.formatRoomForClient(room),
+    player: roomManager.formatRoomPlayerForClient(player),
+  });
+});
 
 sockets.on("connection", (socket) => {
   const playerId = socket.id;
   console.log(`Player connected on Server with id: ${playerId}`);
+
   socket.emit("gameInfo", {
     constants: { pieces: Tictactoe.pieces, states: Tictactoe.states },
+    nameRegexPattern,
   });
 
   socket.on("disconnect", () => {
-    leave({ type: "room", data: { socket } });
+    socket.leaveRoom();
+    socket.leaveLobby();
+  });
+
+  socket.getPlayer = function (player) {
+    if (player.id === this.id) {
+      return "player";
+    }
+    return "opponent";
+  };
+
+  socket.joinLobby = function () {
+    if (this.room) {
+      this.leaveRoom();
+    }
+    if (!this.inLobby) {
+      this.join("lobby");
+      this.emit("joined lobby");
+      this.inLobby = true;
+      updateRooms({ socket: this });
+    }
+  };
+
+  socket.leaveLobby = function () {
+    if (this.inLobby) {
+      this.leave("lobby");
+      this.emit("left lobby");
+      this.inLobby = false;
+    }
+  };
+
+  socket.joinRoom = function ({ name, playerName }) {
+    console.log(`Player: ${playerName} trying to join room: ${name}`);
+    if (!name || !nameRegex.test(name)) {
+      //TODO: Display invalid room name error
+      return;
+    }
+
+    if (!playerName || !nameRegex.test(playerName)) {
+      //TODO: Display invalid player name error
+      return;
+    }
+    try {
+      roomManager.join({ name, player: { id: this.id, name: playerName } });
+      this.room = roomManager.get({ name });
+    } catch (e) {
+      if (e instanceof RoomNotFoundError) {
+        roomManager.create({ name });
+        socket.joinRoom({ name, playerName });
+      } else {
+        console.log(name);
+        console.log(e);
+        return;
+      }
+    }
+
+    this.leaveLobby();
+
+    this.room.game.events.on("board value changed", (data) => {
+      let newData = { ...data };
+      if (newData.value && newData.value.id) {
+        newData.value = this.getPlayer(newData.value);
+      }
+      this.emit("board value changed", newData);
+    });
+
+    this.room.game.events.on("game state changed", (data) => {
+      let newData = { ...data };
+      if (newData.winner) {
+        newData.winner = socket.getPlayer(newData.winner);
+      }
+      this.emit("game state changed", newData);
+    });
+
+    this.room.game.events.on("turn changed", ({ turnPlayer }) => {
+      if (turnPlayer) {
+        this.emit("turn changed", {
+          turnPlayer: this.getPlayer(turnPlayer),
+          player: roomManager.formatRoomPlayerForClient(turnPlayer),
+        });
+      }
+    });
+
+    this.join(name);
+    this.emit("joined room", roomManager.formatRoomForClient(this.room));
+  };
+
+  socket.leaveRoom = function () {
+    if (this.room) {
+      try {
+        roomManager.leave({
+          name: this.room.name,
+          player: { id: this.id },
+        });
+      } catch (e) {
+        console.log(e);
+        return;
+      }
+      this.leave(this.room.name);
+      delete this.room;
+      this.emit("left room");
+      this.joinLobby();
+    }
+  };
+
+  socket.on("start game", () => {
+    socket.room.game.requestStart({ id: socket.id });
   });
 
   socket.on("play", (data) => {
@@ -161,27 +185,20 @@ sockets.on("connection", (socket) => {
     }
   });
 
-  socket.on("create room", ({ name }) => {
-    if (rooms[name]) {
-      return;
-    } else {
-      console.log("Creating room");
-      rooms[name] = {
-        name: name,
-        game: new Tictactoe(),
-        players: [],
-      };
-      updateRooms({ rooms });
-      join({ type: "room", data: { name, socket } });
-    }
+  socket.on("join lobby", () => {
+    socket.joinLobby();
   });
 
-  socket.on("join", ({ type, data }) => {
-    join({ type, data: { socket, ...data } });
+  socket.on("leave lobby", () => {
+    socket.leaveLobby();
   });
 
-  socket.on("leave", ({ type, data }) => {
-    leave({ type, data: { socket, ...data } });
+  socket.on("join room", (data) => {
+    socket.joinRoom({ ...data });
+  });
+
+  socket.on("leave room", () => {
+    socket.leaveRoom();
   });
 });
 

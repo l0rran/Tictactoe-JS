@@ -1,7 +1,5 @@
 import EventEmitter from "events";
 
-class TictactoeEmitter extends EventEmitter {}
-
 class Tictactoe {
   static pieces = {
     EMPTY: "empty",
@@ -10,54 +8,30 @@ class Tictactoe {
   static states = {
     Playing: "playing",
     Over: "over",
+    Paused: "paused",
   };
 
-  players = {};
+  players = [];
 
-  events = new TictactoeEmitter();
+  events = new EventEmitter();
 
   #board;
   #turnPlayer;
+
+  #previousGameState;
   #gameState;
-  #winPositions = [
-    [0, 1, 2],
-    [3, 4, 5],
-    [6, 7, 8],
-    [0, 3, 6],
-    [1, 4, 7],
-    [2, 5, 8],
-    [0, 4, 8],
-    [2, 4, 6],
-  ];
 
   constructor(players) {
     this.#board = Array(9).fill(Tictactoe.pieces.EMPTY);
-    this.restart();
     if (players) {
       this.players = players;
     }
-
-    this.events.on("player joined", ({ playerId }) => {
-      let addId;
-      if (!this.players[0]) {
-        addId = 0;
-      } else if (!this.players[1]) {
-        addId = 1;
-      }
-      if (addId !== undefined) {
-        this.players[addId] = { id: addId, playerId };
-      }
-    });
-
-    this.events.on("player left", ({ playerId }) => {
-      for (let [key, player] of Object.entries(this.players)) {
-        if (player.playerId === playerId) {
-          delete this.players[key];
-        }
-      }
-    });
-
     this.changeGameState(Tictactoe.states.Over);
+
+    this.events.on("player left", () => {
+      this.changeGameState(Tictactoe.states.Over);
+      this.resetBoard();
+    });
   }
 
   getBoard() {
@@ -79,29 +53,68 @@ class Tictactoe {
 
   changeGameState(data) {
     if (data.state === this.#gameState) return;
+    this.#previousGameState = this.#gameState;
     this.#gameState = data.state;
+    if (this.#previousGameState) {
+      data.previousState = this.#previousGameState;
+    }
     this.events.emit("game state changed", data);
   }
 
-  restart() {
+  resetBoard() {
+    this.#board.forEach((value, index) => {
+      this.changeBoardValue(index, Tictactoe.pieces.EMPTY);
+    });
+  }
+
+  requestStart({ id }) {
+    const player = this.players.find((p) => p.id === id);
+    if (player) {
+      player.requestStart = true;
+    }
     if (
       this.#gameState !== Tictactoe.states.Playing &&
-      this.players[0] &&
-      this.players[1]
+      this.players.length === 2 &&
+      this.players.every((p) => p.requestStart === true)
     ) {
-      this.#board.forEach((value, index) => {
-        this.changeBoardValue(index, Tictactoe.pieces.EMPTY);
-      });
+      this.players.forEach((p) => (p.requestStart = false));
+      this.resetBoard();
       this.changeGameState({ state: Tictactoe.states.Playing });
-      this.changeTurn(0);
+      this.changeTurn(Math.round(Math.random()));
+    }
+  }
+
+  pause() {
+    if (this.#gameState === Tictactoe.states.Playing) {
+      this.changeGameState({ state: Tictactoe.states.Paused });
+    }
+  }
+
+  resume() {
+    if (
+      this.#gameState === Tictactoe.states.Paused &&
+      this.players.length === 2
+    ) {
+      this.changeGameState({ state: Tictactoe.states.Playing });
     }
   }
 
   verifyWin() {
     if (this.#gameState !== Tictactoe.states.Playing) return;
 
+    const winPositions = [
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+      [0, 4, 8],
+      [2, 4, 6],
+    ];
+
     let emptyPositions = 0;
-    this.#winPositions.forEach((positions) => {
+    winPositions.forEach((positions) => {
       let value = Tictactoe.pieces.EMPTY;
       let same = 0;
       positions.forEach((position) => {
@@ -131,7 +144,7 @@ class Tictactoe {
     if (this.#gameState !== Tictactoe.states.Playing) {
       return;
     }
-    if (this.#turnPlayer.playerId !== playerId) {
+    if (this.#turnPlayer.id !== playerId) {
       console.log("Not player turn!");
       console.log(`Player turn id: ${this.#turnPlayer.playerId}`);
       console.log(`Player Id: ${playerId}`);
