@@ -182,12 +182,6 @@ sockets.on("connection", (socket) => {
     }
   });
 
-  socket.on("reset", () => {
-    if (socket.room) {
-      socket.room.game.restart();
-    }
-  });
-
   socket.on("join lobby", () => {
     socket.joinLobby();
   });
