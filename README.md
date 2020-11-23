@@ -4,7 +4,7 @@
 
 ## Descrição
 
-O clássico jogo da velha, multiplayer.
+O clássico jogo da velha em multiplayer.
 Projeto feito com o intuito de testar e aprimorar meus conhecimentos em Javascript.
 
 ## Tecnologias
